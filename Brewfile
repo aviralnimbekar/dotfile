@@ -1,9 +1,6 @@
 # Brewfile — managed by `brew bundle`
 # Regenerate with: brew bundle dump --force
 
-# Taps
-tap "homebrew/cask"
-
 # CLI tools
 brew "git"
 brew "zsh"

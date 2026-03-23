@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 if [ ! -d "$HOME/.sdkman" ]; then
   echo "→ Installing SDKMAN..."

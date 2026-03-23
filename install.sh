@@ -62,6 +62,7 @@ echo "→ Creating project directories..."
 mkdir -p "$HOME/projects/personal" "$HOME/projects/client"
 
 # --- SDKMAN ---
-bash "$DOTFILES/scripts/shell/install_sdkman.sh"
+chmod +x "$DOTFILES/scripts/shell/install_sdkman.sh"
+"$DOTFILES/scripts/shell/install_sdkman.sh"
 
 echo "✓ Done! Restart your terminal."
