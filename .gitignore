@@ -1,0 +1,8 @@
+.DS_Store
+*.local
+iterm/com.googlecode.iterm2.plist
+
+# Editors
+.idea/
+.vscode/
+.iml

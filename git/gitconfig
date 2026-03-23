@@ -1,0 +1,296 @@
+# file location: ~/.gitconfig
+
+# Note:
+# [Windows users] If you are on windows, please search for the word 'windows' - and fix those lines - they seem to cause some trouble
+# [General] Since some of the settings are specific to my setup (ie presence of fles), I have marked those lines with comments 'Personal' - you can go ahead and change those to your equivalents or delete them altogether
+# [General] Since I use 'diff-so-fancy' as the diffing tool, it's absence on your system will cause some errors. If you are able to, I would sincerely urge you to install and use it for a much better experience. If not, please replace all such occurrences back to use 'diff'
+
+# Note: Even though this will show up twice in `git config -l` - it will still be overridden based on the order of the includeIf lines below
+
+[user]
+  name = Aviral Nimbekar
+
+[includeIf "gitdir/i:~/projects/personal/"] # Personal folder path
+  path = ~/.gitconfig-personal.inc          # Personal folder path
+[includeIf "gitdir/i:~/projects/<client>/"] # Personal folder path
+  path = ~/.gitconfig-jd.inc                # Personal folder path
+
+[advice]
+  detachedHead = true
+[alias]
+  # Run git commands in all immediate sub-folders that are git repos (TODO: Not working since it ALWAYS selects from the user's home directory)
+  # all = "!f() { find \"${FOLDER:-.}\" -mindepth ${MINDEPTH:-1} -maxdepth ${MAXDEPTH:-2} -name .git -type d | xargs -I{} bash -c \"echo {} && git -C {}/../ $1\"; }; echo `pwd`; f"
+  # find dangling commits
+  dangling = fsck --no-reflog
+  # edit global git configuration
+  ec = config --global -e
+  # find files/folders with the parameter as part of the name
+  f = "!git ls-files | grep -i"
+  # if a local commit exists, then amend it, else create a new commit with the specified message. Aborts if diverged or nothing to commit
+  sci = "!sh -c '\
+    if $(git status | grep -q \"have diverged\"); then \
+      echo \"Diverged branches: aborting\"; \
+      exit 1; \
+    elif ! $(git status | grep -q \"to unstage\"); then \
+      echo \"Nothing to commit: aborting\"; \
+      exit 1; \
+    else \
+      if $(git status | grep -q \"is ahead of\"); then \
+        echo \"Amending existing commit\"; \
+        git amq; \
+      else \
+        echo \"Creating new commit\"; \
+        echo $0; \
+        git ci \"$0\"; \
+      fi \
+    fi'"
+  what = show -s --pretty='tformat:%h (%s, %ad)' --date=short
+  # show commit info summary (count and name)
+  who = shortlog -s --
+  # show username/email of the specified author
+  whois = log -i -1 --pretty=format:'%an <%ae>' --author
+  # show all commits in the past week done by the specified author
+  standup = log --since 1.week.ago --author
+  # show git log in colorful graph mode
+  lg = log --color --graph --pretty=format:'%C(yellow)%h%Creset -%C(bold blue)%d%Creset %s %C(green) %an, %cr%Creset' --abbrev-commit
+  ll = log --decorate --graph --oneline --abbrev-commit
+  lluntilmain = !git --no-pager ll master..HEAD
+  mn = merge --no-commit
+  cn = cherry-pick --no-commit
+  cr = cherry-pick
+  # commit with the following message
+  ci = commit -m
+  co = checkout
+  cl = clone
+  st = !git status && git submodule summary
+  sts = status -sb
+  b = branch
+  d = diff
+  dc = diff --staged
+  # dw = diff --word-diff=color           # Note: Commented out since we use 'diff-so-fancy
+  # dcw = diff --word-diff=color --staged # Note: Commented out since we use 'diff-so-fancy
+  # undo the last commit
+  undo = reset --soft HEAD^
+  wipe = !git add -A && git commit -qm 'WIPE SAVEPOINT if needed later, can be resurrected using reflog' && git reset HEAD~1 --hard
+  # amend last commit and update the commit date to now
+  amend = commit --amend --date="now"
+  # amend last commit keeping the same commit comment, but updating the commit date to now
+  amq = amend --no-edit --quiet
+  # unstage all staged changes without losing the changed content
+  unstage = restore --staged
+  # list all large files
+  large = !git ls-tree -r -t -l --full-name HEAD | sort -n -k 4 | tail -n 10
+  # untrack a file
+  untrack = rm -rf --cached --
+  grep = grep -Ii
+  # As a shortcut for a 'normal' diff to save as a patch for emailing or later application (without diff-so-fancy)
+  patch = !git --no-pager diff --no-color
+  # show tracking upstream string in the format `<remote>/<branch>`
+  track = rev-parse --abbrev-ref --symbolic-full-name @{u}
+  # fetch all branches (fetch tags only from the upstream remote) - (without merging into the local copy of remote)
+  fo = !git fetch --all --tags
+  # print the current branch name
+  br = rev-parse --abbrev-ref HEAD
+  # rebase from corresponding upstream branch
+  upreb = !git branch -u origin/`git br` && git fo && ( git remote | grep upstream 2>&1 >/dev/null ) && git rebase upstream/`git br` --no-verify && git fetch upstream --tags && git push --no-verify && git push --tags --no-verify
+  # prune local copy-of-remote to remove deleted branches
+  rpo = remote prune origin
+  # show incoming change commits without per-file content changes
+  in = log --reverse ..@{u} --stat --no-merges
+  # show incoming change commits with per-file content changes
+  inp = log -p --reverse ..@{u} --no-merges
+  # show incoming changes as a single diff (without breakup of commits)
+  inc = !git diff ..@{u}
+  # if you prefer to do "git pull" instead of "git fetch", this can be an equivalent of the "in" alias
+  new = !sh -c 'git log $1@{1}..$1@{0} "$@"'
+  # show outgoing change commits
+  out = log --reverse @{u}..
+  # show outgoing change commits with content changes
+  outp = log -p --reverse @{u}..
+  g = grep --break --heading --line-number
+  sf = submodule foreach
+  # compress disk-space-usage by deleting dangling commits
+  # Note: Do not use '--all' switch for reflog expire - since that also destroys stashes
+  cc = "!echo \"Size before: $(du -sh .git | cut -f1)\"; git remote prune origin; git repack; git prune-packed; git reflog expire --all --expire=1.week.ago; git gc --force --aggressive --prune=now; echo \"Size after: $(du -sh .git | cut -f1)\";"
+  # show the biggest files in the disk (this is not technically specific to git-tracked files)
+  big = "!git rev-list --objects --all | grep \"$(git verify-pack -v .git/objects/pack/*.idx | sort -k 3 -n | tail -100 | awk '{print $1}')\""
+  # delete all local branches which are not present on remote
+  dlb = "!git branch -vv | GREP_OPTIONS= grep ': gone]' | awk '{print $1}' | xargs -I {} git branch -D {}"
+
+  # check if the specified branch has had a commit in the past 10 days and if so, report
+  # old = "!sh -c '[[ \"`git log $0/$1 --since 10.days -1 | wc -l`\" -eq 0 ]] && echo \"Will need to delete $0/$1\" && git push $0 --delete $1'"
+  old = "!sh -c '[[ \"`git log $0/$1 --since 10.days -1 | wc -l`\" -eq 0 ]] && echo \"Will need to delete $0/$1\"'"
+
+  # list all branches along with the committer and when the last commit was done
+  lc = "!git branch -r --sort=-committerdate --format=\"%(color:magenta)%(committerdate:relative)%(color:reset) %(color:bold cyan)%(refname:short)%(color:reset) %(contents:subject) %(color:bold blue) <%(authorname)> %(color:reset)\""
+
+  # [DUPLICATE - WIP] list all branches using the 'log' command which allows to set a particular start date
+  lc2 = "!git branch -r --sort=-committerdate | egrep -v 'HEAD|master|main' | while read b; do git log --since 4.days --color --format=\"%ci _%C(magenta)%cr %C(bold cyan)$b%Creset %s %C(bold blue)<%an>%Creset\" $b | head -n 1; done | sort -r | cut -d_ -f2-"
+
+  # search for specific strings in your commits
+  se = "!git rev-list --all | xargs git grep -F"
+
+  # [siu = submodule init update] Runs submodule-initialisation and update after a fresh checkout RECURSIVE!
+  siu = "!git submodule update --init --recursive; git sf \"git siu\""
+  # push all submodules
+  pushsub = sf "git push"
+  # pull all submodules
+  pullsub = sf "git pull"
+  # show diffs with colored words (red word is deleted, green word is added)
+  dcolor = diff --color-words
+	pr = pull -r
+	prunetags = fetch --prune --prune-tags origin
+	forcepush = push --force-with-lease --no-verify
+	pmaster = pull origin master -r
+	cb = checkout -b
+	cm = commit -m
+	rsm = reset --hard origin/master
+[branch]
+  autoSetupMerge = true
+  autoSetupRebase = always
+  # sort branches by last commit date
+  sort = committerdate
+[checkout]
+  defaultRemote = origin
+  workers = 0
+[color "diff"]
+  meta = yellow
+  frag = magenta bold
+  func = 146 bold
+  commit = yellow bold
+  old = red bold
+  new = green bold
+  whitespace = red reverse
+[core]
+  # pager = diff-so-fancy | less --tabs=2 -RFX
+  # pager = delta           # Trying out 'delta'
+  editor = code --wait
+  # editor = vi
+  autocrlf = input
+  excludesfile = ~/.gitignore_global   # Personal
+  commentChar = *
+  whitespace = fix
+	# pager = cat
+# Trying out the competing product called 'delta' installed via 'homebrew'
+# [delta]
+#   tab-width = 2
+#   plus-style = "syntax #012800"
+#   minus-style = "syntax #340001"
+#   # syntax-theme = ansi  # To see demo of all themes, use: `delta --show-syntax-themes`
+#   file-modified-label = modified:
+#   hyperlinks = true
+#   navigate = true
+#   line-numbers = true
+#   features = unobtrusive-line-numbers decorations
+#   hyperlinks-file-link-format = file-open://{path}:{line}     # Note: This will require you to register a URL-handler for 'file-open' (for Mac, you can use: SwiftDefaultApps)
+#   hunk-header-style = line-number syntax
+#   # whitespace-error-style = 22 reverse
+#   # inspect-raw-lines = false
+# [delta "unobtrusive-line-numbers"]
+#   line-numbers = true
+#   line-numbers-left-format = "{nm:>4}┊"
+#   line-numbers-right-format = "{np:>4}│"
+#   line-numbers-left-style = cyan
+#   line-numbers-right-style = green
+# [delta "decorations"]
+#   commit-decoration-style = bold yellow box ul
+#   file-style = bold yellow ul
+#   file-decoration-style = green box
+#   hunk-header-decoration-style = cyan box ul
+[diff]
+  compactionHeuristic = true
+  renames = true
+  renameLimit = 1000
+  colorMoved = default
+  submodule = diff
+[diff-so-fancy]
+  # markEmptyLines = false
+  # changeHunkIndicators = false
+  # stripLeadingSymbols = false
+  # useUnicodeRuler = false
+[fetch]
+	prune = true
+	pruneTags = true
+  parallel = 0
+[filter "lfs"]
+  required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+[gc]
+  auto = 2000
+  pruneExpire = now
+  worktreePruneExpire = 2.weeks.ago
+  reflogExpire = 1.month.ago
+  reflogExpireUnreachable = 1.month.ago
+  rerereResolved = 1.month.ago
+[grep]
+  column = true
+  extendedRegexp = true
+  lineNumber = true
+  fullName = true
+[gui]
+  pruneduringfetch = true
+  matchtrackingbranch = true
+  warndetachedcommit = true
+  tabsize = 2
+[help]
+  autocorrect = 1
+[init]
+  defaultBranch = main
+	templatedir = /Users/aviralnimbekar/.git-template
+[interactive]
+  # diffFilter = diff-so-fancy --patch
+  # diffFilter = delta --color-only   # Trying out 'delta'
+[merge]
+  defaultToUpstream = true
+  ff = only
+  renamelimit = 15000
+  # conflictstyle = diff3
+  autoStash = true
+[pack]
+  threads = 0
+[pager]
+	branch = false
+	log = true
+  # log = diff-so-fancy | less --tabs=2 -RFX
+  # show = diff-so-fancy | less --tabs=2 -RFX   # windows
+  # Note: The '--pattern' switch sets some pre-search terms, but also scrolls to fill the whole console for single line change - which I dont like.
+  # diff = diff-so-fancy | less --tabs=2 -RFX  # --pattern '^(Date|added|deleted|modified|renamed): '    # windows
+[pull]
+  rebase = true
+  autoStash = true
+[push]
+  default = upstream
+  followTags = true
+  recurseSubmodules = check
+[rebase]
+  # autoSquash = true
+  autoStash = true
+  missingCommitsCheck = error
+  abbreviateCommands = true
+[rerere]
+  enabled = true
+  autoUpdate = true
+[stash]
+  untracked = true
+  showIncludeUntracked = true
+  showPatch = true
+[status]
+  showUntrackedFiles = all
+  # Convert to 'true' in case you work with submodules - but, will have visible perf slowdown on windows
+  submoduleSummary = true     # windows
+  showStash = true
+[submodule]
+  fetchJobs = 0
+  # recurse = true
+[tag]
+  sort = version:refname
+[transfer]
+  fsckobjects = false
+[http]
+  postBuffer = 786432000
+[user]
+  useConfigOnly = true
+[credential]
+  helper = /usr/local/share/gcm-core/git-credential-manager-core

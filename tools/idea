@@ -1,0 +1,7 @@
+# Mac M series file location: /usr/local/bin/idea or ~/.local/bin
+# This script is to open intelliJ from CLI.
+  Copy this file to "/usr/local/bin" with file name as idea and replace application name as per your system
+
+#!/bin/sh
+
+open -na "IntelliJ IDEA.app" --args "$@"

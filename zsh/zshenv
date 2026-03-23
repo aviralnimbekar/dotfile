@@ -1,0 +1,6 @@
+# Environment variables set before shell starts
+# Good place for EDITOR, LANG, etc.
+
+export EDITOR="vim"
+export LANG="en_US.UTF-8"
+export DOTFILES="$HOME/.dotfiles"
