@@ -17,11 +17,9 @@ if [ -f "$DOTFILES/Brewfile" ]; then
   brew bundle --file="$DOTFILES/Brewfile"
 fi
 
-# --- oh-my-zsh ---
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  echo "→ Installing oh-my-zsh..."
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-fi
+# --- oh-my-zsh + plugins ---
+chmod +x "$DOTFILES/installation/install_oh_my_zsh.sh"
+"$DOTFILES/installation/install_oh_my_zsh.sh"
 
 # --- Symlinks ---
 echo "→ Creating symlinks..."
@@ -62,7 +60,7 @@ echo "→ Creating project directories..."
 mkdir -p "$HOME/projects/personal" "$HOME/projects/client"
 
 # --- SDKMAN ---
-chmod +x "$DOTFILES/scripts/shell/install_sdkman.sh"
-"$DOTFILES/scripts/shell/install_sdkman.sh"
+chmod +x "$DOTFILES/installation/install_sdkman.sh"
+"$DOTFILES/installation/install_sdkman.sh"
 
 echo "✓ Done! Restart your terminal."
