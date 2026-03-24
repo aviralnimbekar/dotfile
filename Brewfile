@@ -8,6 +8,7 @@ brew "z"
 brew "fzf"
 brew "ripgrep"
 brew "jq"
+brew "gh"
 
 # Apps
 cask "iterm2"
