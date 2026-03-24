@@ -61,6 +61,6 @@ mkdir -p "$HOME/projects/personal" "$HOME/projects/client"
 
 # --- SDKMAN ---
 chmod +x "$DOTFILES/installation/install_sdkman.sh"
-"$DOTFILES/installation/install_sdkman.sh"
+/opt/homebrew/bin/bash "$DOTFILES/installation/install_sdkman.sh"
 
 echo "✓ Done! Restart your terminal."
