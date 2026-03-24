@@ -8,6 +8,8 @@ brew "z"
 brew "fzf"
 brew "ripgrep"
 brew "jq"
+brew "kiro-cli"
+brew "claude-code"
 
 # Apps
 cask "iterm2"
